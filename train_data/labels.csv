@@ -1,0 +1,3 @@
+id,text,label,source,category
+sample_001,"Contoh berita valid untuk pengujian format data.",0,kompas.com,news
+sample_002,"BREAKING!! Ini adalah contoh berita hoax untuk pengujian.",1,whatsapp,chain_message

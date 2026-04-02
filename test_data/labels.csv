@@ -1,0 +1,3 @@
+id,text,label,source,category
+test_001,"Contoh berita valid untuk pengujian.",0,detik.com,news
+test_002,"HOAX! Berita palsu untuk pengujian.",1,facebook,social_media

@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model files (large)
+models/*.pt
+models/*.h5
+models/*.bin
+models/*.safetensors
+models/*.onnx
+!models/.gitkeep
+
+# Data (may contain PII)
+train_data/*.txt
+train_data/**/*.txt
+test_data/*.txt
+test_data/**/*.txt
+!train_data/.gitkeep
+!test_data/.gitkeep
+!train_data/labels.csv
+!test_data/labels.csv
+
+# HuggingFace cache
+.cache/
+huggingface/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+runs/
+wandb/

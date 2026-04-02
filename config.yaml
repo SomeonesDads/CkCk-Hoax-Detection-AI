@@ -1,0 +1,57 @@
+# =============================================================================
+# CkCk Hoax Detection AI — Configuration
+# =============================================================================
+
+# Model settings
+model:
+  name: "indobenchmark/indobert-base-p2"
+  num_labels: 2                    # 0 = valid, 1 = hoax
+  max_length: 256                  # Max token sequence length
+  dropout: 0.1
+
+# Training settings
+training:
+  epochs: 5
+  batch_size: 16
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  eval_steps: 100
+  save_steps: 500
+  seed: 42
+  fp16: false                     # Set true if GPU supports it
+
+# Data settings
+data:
+  train_path: "train_data/labels.csv"
+  test_path: "test_data/labels.csv"
+  text_column: "text"
+  label_column: "label"
+  val_split: 0.15                 # 15% of train for validation
+  max_samples: null               # null = use all, set integer to limit
+
+# PII Filter settings
+pii_filter:
+  enabled: true
+  mask_char: "█"
+  types:
+    - nik                         # 16-digit NIK
+    - phone                       # +62xx / 08xx format
+    - email                       # Email addresses
+    - bank_account                # 16-digit bank account
+    - npwp                        # Bonus: NPWP (tax ID)
+    - passport                    # Bonus: Passport number
+
+# Inference settings
+inference:
+  device: "cpu"                   # Force CPU for competition
+  model_path: "models/best_model.pt"
+  batch_size: 8
+  confidence_threshold: 0.5       # Classification threshold
+
+# Paths
+paths:
+  model_dir: "models"
+  train_data: "train_data"
+  test_data: "test_data"
+  logs: "logs"
