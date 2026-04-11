@@ -42,8 +42,9 @@ class PIIFilter:
     # ── Regex Patterns ──────────────────────────────────────────────────
     PATTERNS = {
         # NIK: exactly 16 digits (Indonesian national ID)
+        # Day field: 01-31 for male, 41-71 for female (day + 40)
         "nik": re.compile(
-            r'\b(\d{6}(?:0[1-9]|[12]\d|3[01])(?:0[1-9]|1[0-2])\d{2}\d{4})\b'
+            r'\b\d{6}(?:0[1-9]|[12]\d|3[01]|4[1-9]|[56]\d|7[01])(?:0[1-9]|1[0-2])\d{2}\d{4}\b'
         ),
 
         # Phone: Indonesian format (+62 / 62 / 08xx)
