@@ -4,7 +4,7 @@
 
 # Model settings
 model:
-  name: "indobenchmark/indobert-base-p2"
+  name: "indobenchmark/indobert-lite-base-p2"
   num_labels: 2                    # 0 = valid, 1 = hoax
   max_length: 256                  # Max token sequence length
   dropout: 0.1
