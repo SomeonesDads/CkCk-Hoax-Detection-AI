@@ -193,11 +193,12 @@ class Trainer:
             # Save best model
             if val_metrics["f1"] > best_f1:
                 best_f1 = val_metrics["f1"]
-                save_path = os.path.join(self.paths_cfg["model_dir"], "best_model")
+                version = self.train_cfg.get("version", "latest")
+                save_path = os.path.join(self.paths_cfg["model_dir"], f"best_model_{version}")
                 os.makedirs(save_path, exist_ok=True)
                 self.model.save_pretrained(save_path)
                 self.tokenizer.save_pretrained(save_path)
-                print(f"  ✓ New best model saved (F1: {best_f1:.4f})")
+                print(f"  ✓ New best model saved to {save_path} (F1: {best_f1:.4f})")
 
         print("\n" + "=" * 60)
         print(f"Training complete! Best Val F1: {best_f1:.4f}")

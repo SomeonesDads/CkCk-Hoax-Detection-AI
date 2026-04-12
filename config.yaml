@@ -11,6 +11,7 @@ model:
 
 # Training settings
 training:
+  version: "v2"                   # Version name for the saved model
   epochs: 5
   batch_size: 16
   learning_rate: 2.0e-5
