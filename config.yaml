@@ -23,7 +23,7 @@ training:
 
 # Data settings
 data:
-  train_path: "train_data/labels.csv"
+  train_path: "train_data/merged_labels.csv"
   test_path: "test_data/labels.csv"
   text_column: "text"
   label_column: "label"

@@ -25,6 +25,7 @@ Perbaikan dari versi placeholder:
 """
 
 import re
+from typing import Optional
 from dataclasses import dataclass
 
 
@@ -210,7 +211,7 @@ class PIIFilter:
     def __init__(
         self,
         mask_char: str = "█",
-        enabled_types: list[str] | None = None,
+        enabled_types: Optional[list[str]] = None,
     ):
         self.mask_char = mask_char
         self.enabled_types = enabled_types or list(self._COMPILED.keys())

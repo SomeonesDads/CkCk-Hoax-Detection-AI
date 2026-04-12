@@ -32,10 +32,13 @@ def set_seed(seed: int = 42):
 
 
 def get_device() -> torch.device:
-    """Get the best available device (GPU > CPU)."""
+    """Get the best available device (GPU > Mac GPU > CPU)."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
         print(f"[INFO] Using GPU: {torch.cuda.get_device_name(0)}")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")
+        print("[INFO] Using Mac GPU (MPS)")
     else:
         device = torch.device("cpu")
         print("[INFO] Using CPU")

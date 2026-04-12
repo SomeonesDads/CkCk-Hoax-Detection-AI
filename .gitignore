@@ -12,6 +12,7 @@ build/
 venv/
 env/
 .env
+.venv/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -30,6 +31,8 @@ train_data/*.txt
 train_data/**/*.txt
 test_data/*.txt
 test_data/**/*.txt
+train_data/*.csv
+test_data/*.csv
 !train_data/.gitkeep
 !test_data/.gitkeep
 !train_data/labels.csv
