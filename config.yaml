@@ -4,14 +4,14 @@
 
 # Model settings
 model:
-  name: "indobenchmark/indobert-lite-base-p2"
+  name: "indobenchmark/indobert-base-p2"
   num_labels: 2                    # 0 = valid, 1 = hoax
   max_length: 256                  # Max token sequence length
   dropout: 0.1
 
 # Training settings
 training:
-  version: "v3"                   # Version name for the saved model
+  version: "v5"                   # Version name for the saved model
   epochs: 5
   batch_size: 16
   learning_rate: 2.0e-5
@@ -53,6 +53,7 @@ pii_filter:
 # Inference settings
 inference:
   device: "cpu"                   # Force CPU for competition
+  use_onnx: true                  # Enable ONNX Runtime for faster CPU inference
   model_path: "models/best_model.pt"
   batch_size: 8
   confidence_threshold: 0.5       # Classification threshold

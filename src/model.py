@@ -7,9 +7,11 @@ Includes Output Engine with 4-status system and Rule-based Detector integration.
 
 import torch
 import torch.nn as nn
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoConfig
 import yaml
 import os
+import numpy as np
+import onnxruntime as ort
 
 from .rule_detector import RuleBasedDetector
 
@@ -56,6 +58,10 @@ class HoaxDetector:
         self.tokenizer = None
         self.model = None
 
+        # ONNX support
+        self.onnx_mode = False
+        self.ort_session = None
+
         # Rule-based detector for explainability
         self.rule_detector = RuleBasedDetector()
 
@@ -83,7 +89,36 @@ class HoaxDetector:
         )
         self.model.to(self.device)
         self.model.eval()
+        self.onnx_mode = False
         print(f"[INFO] Fine-tuned model loaded on {self.device} (offline)")
+        return self
+
+    def load_onnx(self, model_path: str):
+        """
+        Load a fine-tuned model in ONNX format for optimized CPU inference.
+        
+        Args:
+            model_path: Path to model directory or .onnx file.
+        """
+        if os.path.isdir(model_path):
+            onnx_path = os.path.join(model_path, "model.onnx")
+        else:
+            onnx_path = model_path
+
+        if not os.path.exists(onnx_path):
+            raise FileNotFoundError(f"ONNX model not found at: {onnx_path}")
+
+        print(f"[INFO] Loading ONNX model from: {onnx_path}")
+        
+        # Load tokenizer from the same directory if possible
+        tokenizer_dir = os.path.dirname(onnx_path) if os.path.isfile(model_path) else model_path
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir, local_files_only=True)
+
+        # Initialize ONNX Runtime session
+        self.ort_session = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+        self.onnx_mode = True
+        
+        print(f"[INFO] ONNX model loaded successfully (CPU optimized)")
         return self
 
     def _classify(self, text: str) -> dict:
@@ -96,8 +131,8 @@ class HoaxDetector:
         Returns:
             dict with keys: label, label_id, confidence, probabilities
         """
-        if self.model is None or self.tokenizer is None:
-            raise RuntimeError("Model not loaded. Call load_pretrained() or load_finetuned() first.")
+        if self.tokenizer is None or (self.model is None and self.ort_session is None):
+            raise RuntimeError("Model not loaded. Call load_pretrained(), load_finetuned(), or load_onnx() first.")
 
         inputs = self.tokenizer(
             text,
@@ -108,21 +143,48 @@ class HoaxDetector:
         )
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-            probs = torch.softmax(outputs.logits, dim=-1)
-            pred_idx = torch.argmax(probs, dim=-1).item()
-            confidence = probs[0][pred_idx].item()
+        if self.onnx_mode:
+            # ONNX Inference Path
+            ort_inputs = {
+                "input_ids": inputs["input_ids"].numpy(),
+                "attention_mask": inputs["attention_mask"].numpy(),
+            }
+            ort_outputs = self.ort_session.run(None, ort_inputs)
+            logits = ort_outputs[0]
+            
+            # Convert to probabilities using numpy-based softmax
+            exp_logits = np.exp(logits - np.max(logits, axis=-1, keepdims=True))
+            probs = exp_logits / np.sum(exp_logits, axis=-1, keepdims=True)
+            
+            pred_idx = np.argmax(probs, axis=-1)[0]
+            confidence = probs[0][pred_idx]
+            
+            return {
+                "label": self.LABEL_MAP[pred_idx],
+                "label_id": int(pred_idx),
+                "confidence": round(float(confidence), 4),
+                "probabilities": {
+                    self.LABEL_MAP[i]: round(float(probs[0][i]), 4)
+                    for i in range(self.num_labels)
+                },
+            }
+        else:
+            # PyTorch Inference Path
+            with torch.no_grad():
+                outputs = self.model(**inputs)
+                probs = torch.softmax(outputs.logits, dim=-1)
+                pred_idx = torch.argmax(probs, dim=-1).item()
+                confidence = probs[0][pred_idx].item()
 
-        return {
-            "label": self.LABEL_MAP[pred_idx],
-            "label_id": pred_idx,
-            "confidence": round(confidence, 4),
-            "probabilities": {
-                self.LABEL_MAP[i]: round(probs[0][i].item(), 4)
-                for i in range(self.num_labels)
-            },
-        }
+            return {
+                "label": self.LABEL_MAP[pred_idx],
+                "label_id": pred_idx,
+                "confidence": round(confidence, 4),
+                "probabilities": {
+                    self.LABEL_MAP[i]: round(probs[0][i].item(), 4)
+                    for i in range(self.num_labels)
+                },
+            }
 
     def _determine_status(self, classification: dict, rule_summary: dict) -> dict:
         """
@@ -253,6 +315,8 @@ class HoaxDetector:
             max_length=model_cfg["max_length"],
             device=inference_cfg.get("device", "cpu"),
         )
+        # Store use_onnx preference
+        detector.use_onnx = inference_cfg.get("use_onnx", False)
         return detector
 
 
