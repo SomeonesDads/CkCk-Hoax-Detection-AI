@@ -1,4 +1,4 @@
-# Core ML
+# Core ML & Training
 torch>=2.0.0
 transformers>=4.36.0
 datasets>=2.16.0
@@ -7,6 +7,18 @@ accelerate>=0.25.0
 # IndoBERT tokenizer
 sentencepiece>=0.1.99
 
+# =============================================================================
+# ONNX Runtime — Constraint B-2 (CPUExecutionProvider, offline inference)
+# =============================================================================
+onnxruntime>=1.16.0
+
+# =============================================================================
+# OCR Pipeline (untuk prepare_input jalur frame/video)
+# =============================================================================
+easyocr>=1.7.1             # OCR offline, support Bahasa Indonesia
+Pillow>=10.0.0             # Image processing (bytes input)
+opencv-python-headless>=4.8.0  # Video frame extraction (headless = no GUI)
+
 # Data processing
 pandas>=2.0.0
 numpy>=1.24.0
@@ -14,7 +26,7 @@ scikit-learn>=1.3.0
 
 # Text preprocessing
 regex>=2023.0
-Sastrawi>=1.0.1          # Indonesian stemmer
+Sastrawi>=1.0.1            # Indonesian stemmer
 
 # Evaluation
 seqeval>=1.2.2
@@ -26,6 +38,10 @@ PyYAML>=6.0
 # Notebook support
 jupyter>=1.0.0
 ipywidgets>=8.0.0
+
+# Optional: ONNX export tooling (dibutuhkan saat training.ipynb export ke ONNX)
+# onnx>=1.14.0
+# onnxsim>=0.4.33           # Simplify/optimize ONNX graph
 
 # Optional: data collection
 # beautifulsoup4>=4.12.0

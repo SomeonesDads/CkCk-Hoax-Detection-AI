@@ -44,10 +44,18 @@ pii_filter:
 
 # Inference settings
 inference:
-  device: "cpu"                   # Force CPU for competition
-  model_path: "models/best_model.pt"
+  device: "cpu"                   # Force CPU for competition (Constraint B-2)
+  model_path: "models/indobert_classifier.onnx"  # ONNX model (export dari training.ipynb)
+  tokenizer_path: "models/tokenizer"             # Tokenizer disimpan lokal setelah fine-tuning
   batch_size: 8
   confidence_threshold: 0.5       # Classification threshold
+
+# OCR settings (untuk prepare_input jalur frame/video)
+ocr:
+  min_chars: 15                   # Fallback ke caption jika OCR < 15 karakter
+  languages: ["id", "en"]         # Bahasa Indonesia + English (untuk teks campuran)
+  gpu: false                      # CPU only (Constraint B-2)
+  video_sample_ratios: [0.1, 0.3, 0.5, 0.7, 0.9]  # Posisi frame yang diambil
 
 # Paths
 paths:
