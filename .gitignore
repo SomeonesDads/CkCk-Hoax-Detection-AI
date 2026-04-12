@@ -18,11 +18,11 @@ env/
 *.ipynb_checkpoints
 
 # Model files (large)
-models/*.pt
-models/*.h5
-models/*.bin
-models/*.safetensors
-models/*.onnx
+models/**/*.pt
+models/**/*.h5
+models/**/*.bin
+models/**/*.safetensors
+models/**/*.onnx
 !models/.gitkeep
 
 # Data (may contain PII)
