@@ -1,10 +1,10 @@
-# Constraint Compliance — Track B: The Privacy Brain
+# BAB III: Kepatuhan Constraint — Track B: The Privacy Brain
 
-> **Bab 3 Proposal**: Penjelasan bagaimana model memenuhi setiap constraint Track B.
+> Penjelasan bagaimana model memenuhi setiap constraint Track B.
 
 ---
 
-## B-1: Ukuran Model (≤ 4B Parameter)
+## Constraint 1: Model Size ≤ 4 Miliar Parameter
 
 **Status**: ✅ COMPLIANT
 
@@ -29,11 +29,11 @@ print(f"Total parameters: {total_params:,}")
 
 ---
 
-## B-2: Offline Total
+## Constraint 2: Offline Total (Zero Network Call)
 
 **Status**: ✅ COMPLIANT
 
-Seluruh pipeline inferensi berjalan 100% secara lokal:
+Seluruh pipeline inferensi berjalan 100% secara lokal tanpa network call:
 
 1. **Model weights** di-download sekali saat setup, kemudian disimpan di folder `models/`
 2. **Tidak ada API call** ke server eksternal dalam `inference.ipynb`
@@ -49,7 +49,7 @@ Seluruh pipeline inferensi berjalan 100% secara lokal:
 
 ---
 
-## B-3: PII Filter Wajib
+## Constraint 3: PII Filter Wajib
 
 **Status**: ✅ COMPLIANT
 
@@ -66,7 +66,7 @@ PII Filter berjalan **sebelum** teks diproses oleh model, memastikan data sensit
 
 ---
 
-## B-4: Cakupan PII
+## Constraint 4: Cakupan PII
 
 **Status**: ✅ COMPLIANT (+ Bonus)
 
@@ -88,28 +88,33 @@ PII Filter berjalan **sebelum** teks diproses oleh model, memastikan data sensit
 
 ---
 
-## B-5: Fine-tuning Lokal
+## Constraint 5: Fine-tuning Lokal
 
 **Status**: ✅ COMPLIANT
 
 Model dasar (`indobenchmark/indobert-base-p2`) di-fine-tune menggunakan dataset lokal yang dikurasi secara khusus untuk domain deteksi hoax berbahasa Indonesia.
 
-**Dataset Fine-tuning** (4 sumber CSV):
-- `Cleaned_TurnBackHoax_v3.csv` — Artikel hoax terverifikasi (label=1)
-- `Cleaned_Antaranews_v1.csv` — Berita legitimate Antara (label=0)
-- `Cleaned_Detik_v2.csv` — Berita legitimate Detik (label=0)
-- `Cleaned_Kompas_v2.csv` — Berita legitimate Kompas (label=0)
-- Bahasa: Indonesia
-- Domain: Deteksi konten manipulatif / hoax
-- Format: CSV dengan kolom `url, judul, narasi, label, clean_text`
-- Input model: Concatenation `judul` + `clean_text` (judul mengandung keyword clickbait)
+**Dataset Fine-tuning** (4 sumber CSV, total ~23,711 sampel):
+
+| Sumber | File | Label | Jumlah |
+|---|---|---|---|
+| TurnBackHoax.id (MAFINDO) | `Cleaned_TurnBackHoax_v3.csv` | `1` (hoax) | ~12,744 |
+| Antara News | `Cleaned_Antaranews_v1.csv` | `0` (valid) | ~4,200 |
+| Detik.com | `Cleaned_Detik_v2.csv` | `0` (valid) | ~3,267 |
+| Kompas.com | `Cleaned_Kompas_v2.csv` | `0` (valid) | ~3,500 |
+
+- **Bahasa**: Indonesia
+- **Domain**: Deteksi konten manipulatif / hoax
+- **Format CSV**: kolom `url, judul, narasi, label, clean_text`
+- **Input model**: Concatenation `judul` + `clean_text` — judul mengandung keyword clickbait yang menjadi sinyal penting untuk deteksi hoax
 
 **Proses Fine-tuning**:
 1. Load pre-trained IndoBERT-base-p2
 2. Tambahkan classification head (2 kelas: valid, hoax)
-3. Gabungkan 4 CSV → split 10% test, 15% val, 75% train (stratified)
-4. Fine-tune dengan AdamW optimizer + linear warmup
-5. Evaluasi pada test set terpisah (auto-generated)
-6. Simpan model terbaik berdasarkan F1 score
+3. Gabungkan 4 CSV → split stratified: 10% test, 15% val, 75% train
+4. Fine-tune dengan AdamW optimizer + linear warmup schedule
+5. Gradient clipping (max_norm=1.0) untuk stabilitas training
+6. Evaluasi pada test set terpisah (auto-generated, 2,372 sampel)
+7. Simpan model terbaik berdasarkan F1 score ke `models/best_model/`
 
 **Bukti**: Seluruh log training terlihat di `training.ipynb`.
