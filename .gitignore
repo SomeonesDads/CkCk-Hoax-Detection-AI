@@ -17,12 +17,7 @@ env/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Model files (large)
-models/**/*.pt
-models/**/*.h5
-models/**/*.bin
-models/**/*.safetensors
-models/**/*.onnx
+# Model files (tracked via Git LFS)
 !models/.gitkeep
 
 # Data (may contain PII)
