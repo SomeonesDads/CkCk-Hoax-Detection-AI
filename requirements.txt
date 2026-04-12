@@ -27,6 +27,13 @@ PyYAML>=6.0
 jupyter>=1.0.0
 ipywidgets>=8.0.0
 
+# OCR support
+pytesseract>=0.3.10
+Pillow>=10.0.0
+
+# Optional: EasyOCR fallback (heavier dependency)
+# easyocr>=1.7.0
+
 # Optional: data collection
 # beautifulsoup4>=4.12.0
 # requests>=2.31.0
