@@ -145,10 +145,14 @@ class HoaxDetector:
 
         if self.onnx_mode:
             # ONNX Inference Path
-            ort_inputs = {
-                "input_ids": inputs["input_ids"].numpy(),
-                "attention_mask": inputs["attention_mask"].numpy(),
-            }
+            onnx_input_names = {i.name for i in self.ort_session.get_inputs()}
+            ort_inputs = {}
+            for k in onnx_input_names:
+                if k in inputs:
+                    ort_inputs[k] = inputs[k].numpy()
+                elif k == "token_type_ids":
+                    # Some tokenizers omit token_type_ids; ALBERT needs zeros
+                    ort_inputs[k] = torch.zeros_like(inputs["input_ids"]).numpy()
             ort_outputs = self.ort_session.run(None, ort_inputs)
             logits = ort_outputs[0]
             
@@ -251,15 +255,18 @@ class HoaxDetector:
             "explanation": " ".join(explanation_parts),
         }
 
-    def predict(self, text: str) -> dict:
+    def predict(self, text: str, original_text: str = None) -> dict:
         """
         Full prediction pipeline with 4-status output.
-        
+
         Pipeline: Text → Classifier → Rule Detector → Output Engine → Result
-        
+
         Args:
-            text: Input text to classify.
-            
+            text: Preprocessed (lowercased, cleaned) text for classification.
+            original_text: Pre-preprocessing text (PII-filtered but not lowercased)
+                           used for rule detection so CAPSLOCK/punctuation patterns
+                           are preserved. Falls back to `text` if not provided.
+
         Returns:
             dict with:
                 - status: One of 4 statuses
@@ -273,8 +280,10 @@ class HoaxDetector:
         # Step 1: Classify with IndoBERT
         classification = self._classify(text)
 
-        # Step 2: Detect manipulative patterns
-        rule_summary = self.rule_detector.get_summary(text)
+        # Step 2: Detect manipulative patterns on original casing
+        # (CAPSLOCK and punctuation patterns need pre-lowercase text)
+        rule_text = original_text if original_text is not None else text
+        rule_summary = self.rule_detector.get_summary(rule_text)
 
         # Step 3: Determine 4-status output
         output = self._determine_status(classification, rule_summary)
@@ -289,8 +298,10 @@ class HoaxDetector:
             "patterns": rule_summary,
         }
 
-    def predict_batch(self, texts: list[str]) -> list[dict]:
+    def predict_batch(self, texts: list[str], original_texts: list[str] = None) -> list[dict]:
         """Predict on a batch of texts."""
+        if original_texts is not None:
+            return [self.predict(t, o) for t, o in zip(texts, original_texts)]
         return [self.predict(text) for text in texts]
 
     def save(self, save_path: str):
