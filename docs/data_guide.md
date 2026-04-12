@@ -4,23 +4,49 @@
 
 This guide covers how to collect, clean, and prepare training data for the hoax detection model.
 
-## Required Format
+## Current Dataset
 
-### `labels.csv` Schema
+The training data consists of **4 cleaned CSV files** in `train_data/`:
+
+| File | Source | Label | Description |
+|---|---|---|---|
+| `Cleaned_TurnBackHoax_v3.csv` | TurnBackHoax.id (MAFINDO) | `1` (hoax) | Verified hoax articles |
+| `Cleaned_Antaranews_v1.csv` | Antara News | `0` (valid) | Legitimate news |
+| `Cleaned_Detik_v2.csv` | Detik.com | `0` (valid) | Legitimate news |
+| `Cleaned_Kompas_v2.csv` | Kompas.com | `0` (valid) | Legitimate news |
+
+### CSV Schema
 
 ```csv
-id,text,label,source,category
-article_001,"Full article text here...",0,kompas.com,news
-article_002,"Hoax article text here...",1,whatsapp,chain_message
+url,judul,narasi,label,clean_text
+https://example.com/article,Judul Artikel,Isi narasi lengkap...,0,isi narasi lengkap yang sudah dibersihkan...
 ```
 
-| Column | Type | Values |
+| Column | Type | Description |
 |---|---|---|
-| `id` | string | Unique identifier |
-| `text` | string | Full article/message text |
+| `url` | string | Source URL of the article |
+| `judul` | string | Article title/headline |
+| `narasi` | string | Raw article body text |
 | `label` | int | `0` = valid, `1` = hoax |
-| `source` | string | Origin (kompas.com, whatsapp, etc.) |
-| `category` | string | `news`, `social_media`, `chain_message` |
+| `clean_text` | string | Pre-cleaned, lowercased version of `narasi` |
+
+### Training Input Format
+
+For training, the model receives a concatenation of **title + body**:
+```
+{judul}. {clean_text}
+```
+This leverages clickbait-style titles that often contain keywords used to mislead readers.
+
+## Data Pipeline
+
+The `create_dataloaders()` function in `src/dataset.py` handles:
+
+1. **Loading**: Reads all 4 CSVs and concatenates them
+2. **Concatenation**: Combines `judul` + `clean_text` as model input
+3. **Test split**: Holds out 10% stratified for testing → saved to `test_data/test.csv`
+4. **Train/val split**: Splits remaining 90% into 85% train / 15% validation
+5. **Tokenization**: IndoBERT WordPiece tokenization (max 256 tokens)
 
 ## Data Sources
 
@@ -44,8 +70,9 @@ Collaborative fact-checking platform by Indonesian media organizations.
 
 ### 3. Legitimate News Sources
 
-For "valid" (non-hoax) samples, collect from reputable sources:
+For "valid" (non-hoax) samples, collected from reputable sources:
 
+- `antaranews.com` — National news agency
 - `kompas.com` — National news
 - `detik.com` — National news
 - `tempo.co` — Investigative journalism
@@ -103,15 +130,15 @@ def scrape_news(url, label, source):
 
 ## Data Preparation Checklist
 
-- [ ] Collect minimum **1,000 hoax** samples
-- [ ] Collect minimum **1,000 valid** samples
-- [ ] Ensure balanced class distribution (aim for 50/50)
-- [ ] Remove duplicates
-- [ ] Remove very short texts (< 20 characters)
-- [ ] Remove texts that are purely URLs or images
+- [x] Collect minimum **1,000 hoax** samples
+- [x] Collect minimum **1,000 valid** samples
+- [x] Ensure balanced class distribution (aim for 50/50)
+- [x] Remove duplicates
+- [x] Remove very short texts (< 20 characters)
+- [x] Remove texts that are purely URLs or images
 - [ ] Anonymize any personally identifiable information
-- [ ] Split into `train_data/labels.csv` and `test_data/labels.csv` (80/20)
-- [ ] Validate CSV format loads correctly
+- [x] Auto-split into train/val/test via `config.yaml` settings
+- [x] Validate CSV format loads correctly
 
 ## Data Augmentation (if limited data)
 

@@ -94,17 +94,22 @@ PII Filter berjalan **sebelum** teks diproses oleh model, memastikan data sensit
 
 Model dasar (`indobenchmark/indobert-base-p2`) di-fine-tune menggunakan dataset lokal yang dikurasi secara khusus untuk domain deteksi hoax berbahasa Indonesia.
 
-**Dataset Fine-tuning**:
-- Sumber: TurnBackHoax.id, CekFakta.com, berita legitimate (Kompas, Detik, Tempo)
+**Dataset Fine-tuning** (4 sumber CSV):
+- `Cleaned_TurnBackHoax_v3.csv` — Artikel hoax terverifikasi (label=1)
+- `Cleaned_Antaranews_v1.csv` — Berita legitimate Antara (label=0)
+- `Cleaned_Detik_v2.csv` — Berita legitimate Detik (label=0)
+- `Cleaned_Kompas_v2.csv` — Berita legitimate Kompas (label=0)
 - Bahasa: Indonesia
 - Domain: Deteksi konten manipulatif / hoax
-- Format: CSV dengan kolom `text` dan `label`
+- Format: CSV dengan kolom `url, judul, narasi, label, clean_text`
+- Input model: Concatenation `judul` + `clean_text` (judul mengandung keyword clickbait)
 
 **Proses Fine-tuning**:
 1. Load pre-trained IndoBERT-base-p2
 2. Tambahkan classification head (2 kelas: valid, hoax)
-3. Fine-tune dengan AdamW optimizer + linear warmup
-4. Evaluasi pada test set terpisah
-5. Simpan model terbaik berdasarkan F1 score
+3. Gabungkan 4 CSV → split 10% test, 15% val, 75% train (stratified)
+4. Fine-tune dengan AdamW optimizer + linear warmup
+5. Evaluasi pada test set terpisah (auto-generated)
+6. Simpan model terbaik berdasarkan F1 score
 
 **Bukti**: Seluruh log training terlihat di `training.ipynb`.

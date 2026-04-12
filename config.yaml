@@ -23,12 +23,19 @@ training:
 
 # Data settings
 data:
-  train_path: "train_data/labels.csv"
-  test_path: "test_data/labels.csv"
-  text_column: "text"
-  label_column: "label"
-  val_split: 0.15                 # 15% of train for validation
-  max_samples: null               # null = use all, set integer to limit
+  train_dir: "train_data"          # Directory containing training CSVs
+  train_files:                     # List of CSV files in train_dir
+    - "Cleaned_TurnBackHoax_v3.csv"
+    - "Cleaned_Antaranews_v1.csv"
+    - "Cleaned_Detik_v2.csv"
+    - "Cleaned_Kompas_v2.csv"
+  test_path: "test_data/test.csv"  # Auto-generated test split
+  title_column: "judul"            # Article title (concatenated with text)
+  text_column: "clean_text"        # Pre-cleaned article body
+  label_column: "label"            # 0 = valid, 1 = hoax
+  test_split: 0.10                 # 10% stratified holdout for test
+  val_split: 0.15                  # 15% of remaining train for validation
+  max_samples: null                # null = use all, set integer to limit
 
 # PII Filter settings
 pii_filter:
